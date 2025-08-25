@@ -1,0 +1,28 @@
+.todo-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.todo-contents {
+    display: flex;
+    align-items: baseline;
+}
+
+.todo-edit-buttons {
+    flex-shrink: 0;
+}
+
+h2 {
+    padding: 0px 10px;
+    margin: 5px;
+}
+
+body > ul {
+    margin: 0;
+    padding: 0;
+}
+
+ul {
+    list-style-type: none;
+}
