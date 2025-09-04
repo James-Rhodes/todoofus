@@ -8,7 +8,7 @@
         <template id="todo-template">
             <div class="todo-item">
                 <div class="todo-contents">
-                    <input type="checkbox"></input>
+                    <input class="todo-checkbox" type="checkbox" onchange="toggleTodoItemRecursively(this.closest('.todo-item'))"></input>
                     <h2 class="todo-description"></h2>
                 </div>
                 <div class="todo-edit-buttons">
