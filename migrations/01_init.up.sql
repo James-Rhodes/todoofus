@@ -1,0 +1,15 @@
+CREATE TABLE todos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    description TEXT NOT NULL,
+    completed BOOLEAN NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE todo_relations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    parent_id INTEGER NOT NULL, 
+    child_id INTEGER NOT NULL,
+
+    FOREIGN KEY(parent_id) REFERENCES todos(id) ON DELETE CASCADE,
+    FOREIGN KEY(child_id) REFERENCES todos(id) ON DELETE CASCADE
+);
