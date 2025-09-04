@@ -3,7 +3,13 @@ const todoFormTemplate = document.getElementById("todo-form-template");
 
 // Places the form immediately after the refNode
 function newTodoForm(refNode) {
+  let parentId = "";
+  if (refNode.id != "dummy-first-todo") {
+    parentId = refNode.querySelector("input[name='id']").value;
+  }
+
   const template = todoFormTemplate.content.cloneNode(true);
+  template.querySelector("input[name='parent_id']").value = parentId;
   refNode.after(template);
 }
 
@@ -11,10 +17,14 @@ function removeTodoForm(formElement) {
   formElement.remove();
 }
 
-function createTodo(event) {
+async function createTodo(event) {
   event.preventDefault();
 
   const submittedForm = event.target;
+  let parentId = parseInt(
+    submittedForm.querySelector("input[name='parent_id']").value,
+  );
+  parentId = isNaN(parentId) ? undefined : parentId; // If the value is empty then set it to undefined
 
   const newTodo = document.createElement("ul");
   const listItem = document.createElement("li");
@@ -25,10 +35,28 @@ function createTodo(event) {
   ).value;
   newTodo.appendChild(listItem);
 
-  // TODO: Actually send this to the DB
-
   newTodo.querySelector(".todo-description").textContent = todoDescription;
 
+  let newTodoId = undefined;
+  try {
+    const response = await fetch("/todos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        description: todoDescription,
+        parentId: parentId,
+      }),
+    });
+
+    const json_resp = await response.json();
+    newTodoId = json_resp.id;
+  } catch (e) {
+    console.error("Failed to create Todo item: ", e);
+    return;
+  }
+
+  console.log("NEW TODO WITH ID: ", newTodoId);
+  newTodo.querySelector("input[name='id']").value = newTodoId;
   submittedForm.closest(".todo-form").replaceWith(newTodo);
 }
 

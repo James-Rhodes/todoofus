@@ -9,6 +9,7 @@
             <div class="todo-item">
                 <div class="todo-contents">
                     <input class="todo-checkbox" type="checkbox" onchange="toggleTodoItemRecursively(this.closest('.todo-item'))"></input>
+                    <input type="hidden" name="id" value=""></input>
                     <h2 class="todo-description"></h2>
                 </div>
                 <div class="todo-edit-buttons">
@@ -22,7 +23,8 @@
             <ul class="todo-form">
                 <form class="todo-item" onsubmit="createTodo(event)">
                     <div class="todo-contents">
-                        <input type="text" class="todo-description-input"></input>
+                        <input type="text" class="todo-description-input" name="description"></input>
+                        <input type="hidden" name="parent_id" value=""></input>
                     </div>
                     <div class="todo-edit-buttons">
                         <button class="todo-button" type="submit">Okay</button>

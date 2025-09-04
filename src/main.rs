@@ -3,6 +3,7 @@ use crate::db::DB;
 mod db;
 mod errors;
 mod routes;
+mod todos;
 
 const DB_PATH: &str = "todoofus.db";
 

@@ -3,7 +3,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 
-struct TodoofusError(anyhow::Error);
+pub struct TodoofusError(anyhow::Error);
 
 impl IntoResponse for TodoofusError {
     fn into_response(self) -> Response {
