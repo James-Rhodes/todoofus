@@ -8,9 +8,16 @@ mod todos;
 const DB_PATH: &str = "./data/";
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() {
     tracing_subscriber::fmt::init();
 
+    if let Err(e) = run().await {
+        eprintln!("Application error: {:?}", e);
+        std::process::exit(1);
+    }
+}
+
+async fn run() -> anyhow::Result<()> {
     let db = DB::new(DB_PATH).await?;
     let app = routes::app(db);
 
