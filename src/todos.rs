@@ -6,13 +6,6 @@ use sqlx::prelude::FromRow;
 
 use crate::{db::DB, errors::TodoofusError};
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TodoForCreate {
-    pub parent_id: Option<i64>,
-    pub description: String,
-}
-
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct TodoRow {
     id: i64,
@@ -143,6 +136,13 @@ pub async fn get_all_todos(
     Ok((StatusCode::OK, Json(todo_info.into_display())))
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TodoForCreate {
+    pub parent_id: Option<i64>,
+    pub description: String,
+}
+
 pub async fn create_todo(
     State(db): State<DB>,
     Json(todo_for_create): Json<TodoForCreate>,
@@ -150,4 +150,19 @@ pub async fn create_todo(
     let new_todo = db.create_todo(todo_for_create).await?;
 
     Ok((StatusCode::CREATED, Json(new_todo)))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct TodoForSetCompletion {
+    pub id: i64,
+    pub completed: bool,
+}
+
+pub async fn todo_completion(
+    State(db): State<DB>,
+    Json(todo_for_set_completion): Json<Vec<TodoForSetCompletion>>,
+) -> Result<StatusCode, TodoofusError> {
+    db.set_todo_completion(todo_for_set_completion).await?;
+
+    Ok(StatusCode::CREATED)
 }

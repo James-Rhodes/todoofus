@@ -1,12 +1,12 @@
 use axum::{
     Router,
-    routing::{get, post},
+    routing::{get, patch, post},
 };
 use tower_http::services::{ServeDir, ServeFile};
 
 use crate::{
     db::DB,
-    todos::{create_todo, get_all_todos},
+    todos::{create_todo, get_all_todos, todo_completion},
 };
 
 pub fn app(db: DB) -> Router {
@@ -15,6 +15,7 @@ pub fn app(db: DB) -> Router {
     Router::new()
         .route("/todos", get(get_all_todos))
         .route("/todos", post(create_todo))
+        .route("/todos", patch(todo_completion))
         .fallback_service(serve_dir)
         .with_state(db)
 }

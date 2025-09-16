@@ -16,6 +16,7 @@ window.addEventListener("load", async (event) => {
     const todoElement = createTodoElement(
       todo.id,
       todo.description,
+      todo.completed,
       todo.children,
     );
 
@@ -39,7 +40,7 @@ function removeTodoForm(formElement) {
   formElement.remove();
 }
 
-function createTodoElement(id, todoDescription, childTodos) {
+function createTodoElement(id, todoDescription, todoCompleted, childTodos) {
   const newTodo = document.createElement("ul");
 
   const listItem = document.createElement("li");
@@ -49,10 +50,16 @@ function createTodoElement(id, todoDescription, childTodos) {
   newTodo.querySelector(".todo-description").textContent = todoDescription;
 
   newTodo.querySelector("input[name='id']").value = id;
+  newTodo.querySelector(".todo-checkbox").checked = todoCompleted;
 
   for (child of childTodos) {
     newTodo.appendChild(
-      createTodoElement(child.id, child.description, child.children),
+      createTodoElement(
+        child.id,
+        child.description,
+        child.completed,
+        child.children,
+      ),
     );
   }
 
@@ -91,7 +98,7 @@ async function createTodo(event) {
     return;
   }
 
-  const newTodo = createTodoElement(newTodoId, todoDescription, []);
+  const newTodo = createTodoElement(newTodoId, todoDescription, false, []);
   submittedForm.closest(".todo-form").replaceWith(newTodo);
 }
 
@@ -100,13 +107,33 @@ function getChildrenTodoItems(parentTodo) {
   return parentUL.querySelectorAll(".todo-item");
 }
 
-// TODO: On check of a todo, recursively check all of its children todos
-// TODO: On uncheck of a todo, recursively uncheck all of its children todos
-function toggleTodoItemRecursively(parentTodo) {
+async function toggleTodoItemRecursively(parentTodo) {
   const checked = parentTodo.querySelector(".todo-checkbox").checked;
   const childTodos = getChildrenTodoItems(parentTodo);
 
-  // TODO: Actually send this to the DB
+  const todoToUpdate = [];
+  for (const child of childTodos) {
+    todoToUpdate.push({
+      id: parseInt(child.querySelector("input[name='id']").value),
+      completed: checked,
+    });
+  }
+
+  try {
+    const response = await fetch("/todos", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(todoToUpdate),
+    });
+    if (!response.ok) {
+      throw `server responded ${response.status}: ${response.statusText}`;
+    }
+    console.log("Updated todos with", todoToUpdate);
+  } catch (e) {
+    console.error("Failed to update Todo items: ", e);
+    return;
+  }
+
   for (const child of childTodos) {
     child.querySelector(".todo-checkbox").checked = checked;
   }
