@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::Path};
 
 use sqlx::{
     SqlitePool,
@@ -19,6 +19,11 @@ impl DB {
     pub async fn new(db_path: &str) -> anyhow::Result<DB> {
         // NOTE: Another common option I usually set is cache_size to -256000. Probably not needed
         // for this
+
+        std::fs::create_dir_all(db_path)?;
+
+        let db_path = Path::new(db_path).join("todoofus.db");
+
         let connect_opts = SqliteConnectOptions::new()
             .filename(db_path)
             .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal)

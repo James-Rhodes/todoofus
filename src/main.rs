@@ -5,7 +5,7 @@ mod errors;
 mod routes;
 mod todos;
 
-const DB_PATH: &str = "todoofus.db";
+const DB_PATH: &str = "./data/";
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
