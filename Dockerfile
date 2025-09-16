@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y sqlite3 libsqlite3-dev && rm -rf /var/l
 WORKDIR /usr/src/app
 
 # Copy binary from builder
+COPY --from=builder /usr/src/app/assets/ ./assets
 COPY --from=builder /usr/src/app/target/release/todoofus ./
 
 # Expose any port your app uses (optional)
