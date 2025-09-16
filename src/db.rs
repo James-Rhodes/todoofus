@@ -6,7 +6,8 @@ use sqlx::{
 };
 
 use crate::todos::{
-    TodoForCreate, TodoForSetCompletion, TodoForSetDescription, TodoInfo, TodoRelationRow, TodoRow,
+    TodoForCreate, TodoForDelete, TodoForSetCompletion, TodoForSetDescription, TodoInfo,
+    TodoRelationRow, TodoRow,
 };
 
 #[derive(Clone)]
@@ -180,6 +181,44 @@ impl DB {
             .bind(todo_for_description.id)
             .execute(&mut *tx)
             .await?;
+
+        tx.commit().await?;
+        Ok(())
+    }
+
+    pub async fn delete_todo_recursively(
+        &self,
+        todo_for_delete: TodoForDelete,
+    ) -> anyhow::Result<()> {
+        // Deletes the current todo and all of its children
+
+        let mut tx = self.pool.begin().await?;
+
+        sqlx::query(
+            r#"
+            WITH RECURSIVE related_todos(id) AS (
+                -- 1. Base case: start with todos that match condition
+                SELECT t.id
+                FROM todos t
+                WHERE t.id = ?
+                UNION
+                -- 2. Walk "downwards" to children
+                SELECT tr.child_id
+                FROM todo_relations tr
+                JOIN related_todos rt ON rt.id = tr.parent_id
+            )
+            DELETE FROM todos
+            WHERE id IN (
+                SELECT DISTINCT t.id
+                FROM todos t
+                JOIN related_todos rt ON t.id = rt.id
+                LEFT JOIN todo_relations tr ON tr.parent_id = t.id
+            );
+        "#,
+        )
+        .bind(todo_for_delete.id)
+        .execute(&mut *tx)
+        .await?;
 
         tx.commit().await?;
         Ok(())

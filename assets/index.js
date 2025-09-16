@@ -152,6 +152,7 @@ function newEditTodoForm(todoElement) {
 
   todoElement.replaceWith(editForm);
 }
+
 async function editTodo(event) {
   event.preventDefault();
 
@@ -190,6 +191,34 @@ async function editTodo(event) {
   newTodoItem.querySelector("input[name='id']").value = todoID;
 
   submittedForm.replaceWith(newTodoItem);
+}
+
+async function deleteTodo(todoItem) {
+  if (!confirm("Are you sure?")) {
+    return;
+  }
+
+  const todoID = parseInt(todoItem.querySelector("input[name='id']").value);
+
+  // Send to DB
+  try {
+    const response = await fetch("/todos", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: todoID }),
+    });
+    if (!response.ok) {
+      throw `server responded ${response.status}: ${response.statusText}`;
+    }
+    console.log(`Deleted todo ${todoID}`);
+  } catch (e) {
+    console.error("Failed to delete Todo: ", e);
+    return;
+  }
+
+  // Update DOM
+  const treeUL = todoItem.parentElement.parentElement;
+  treeUL.remove();
 }
 
 // TODO: checked nodes sorted to the bottom of the ul they are in, when unchecked move them back into the unchecked section

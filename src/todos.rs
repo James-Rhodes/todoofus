@@ -170,7 +170,7 @@ pub async fn set_todo_completed(
     );
     db.set_todo_completed(todo_for_set_completion).await?;
 
-    Ok(StatusCode::CREATED)
+    Ok(StatusCode::OK)
 }
 
 #[derive(Debug, Deserialize)]
@@ -187,5 +187,21 @@ pub async fn set_todo_description(
 
     db.set_todo_description(todo_for_set_description).await?;
 
-    Ok(StatusCode::CREATED)
+    Ok(StatusCode::OK)
+}
+
+#[derive(Debug, Deserialize)]
+pub struct TodoForDelete {
+    pub id: i64,
+}
+
+pub async fn delete_todo(
+    State(db): State<DB>,
+    Json(todo_for_delete): Json<TodoForDelete>,
+) -> Result<StatusCode, TodoofusError> {
+    tracing::info!("deleting todo: {:?}", todo_for_delete);
+
+    db.delete_todo_recursively(todo_for_delete).await?;
+
+    Ok(StatusCode::NO_CONTENT)
 }
