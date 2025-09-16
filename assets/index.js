@@ -1,5 +1,6 @@
 const todoTemplate = document.getElementById("todo-template");
 const todoFormTemplate = document.getElementById("todo-form-template");
+const todoEditFormTemplate = document.getElementById("todo-edit-form-template");
 
 window.addEventListener("load", async (event) => {
   let todos;
@@ -120,7 +121,7 @@ async function toggleTodoItemRecursively(parentTodo) {
   }
 
   try {
-    const response = await fetch("/todos", {
+    const response = await fetch("/todos/completed", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(todoToUpdate),
@@ -137,6 +138,58 @@ async function toggleTodoItemRecursively(parentTodo) {
   for (const child of childTodos) {
     child.querySelector(".todo-checkbox").checked = checked;
   }
+}
+
+function newEditTodoForm(todoElement) {
+  const editForm = todoEditFormTemplate.content.cloneNode(true);
+
+  const todoDescription =
+    todoElement.querySelector(".todo-description").innerText;
+  const todoID = todoElement.querySelector("input[name='id']").value;
+
+  editForm.querySelector("input[name='description']").value = todoDescription;
+  editForm.querySelector("input[name='id']").value = todoID;
+
+  todoElement.replaceWith(editForm);
+}
+async function editTodo(event) {
+  event.preventDefault();
+
+  const submittedForm = event.target;
+
+  const newDescription = submittedForm.querySelector(
+    "input[name='description']",
+  ).value;
+
+  const todoID = parseInt(
+    submittedForm.querySelector("input[name='id']").value,
+  );
+
+  // Send to DB
+  try {
+    const response = await fetch("/todos/description", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: todoID, description: newDescription }),
+    });
+    if (!response.ok) {
+      throw `server responded ${response.status}: ${response.statusText}`;
+    }
+    console.log(
+      `Updated todo ${todoID} with new description ${newDescription}`,
+    );
+  } catch (e) {
+    console.error("Failed to update Todo description: ", e);
+    return;
+  }
+
+  // Update DOM
+  const newTodo = todoTemplate.content.cloneNode(true);
+  const newTodoItem = newTodo.querySelector(".todo-item");
+  newTodoItem.querySelector(".todo-description").innerText = newDescription;
+  newTodoItem.querySelector("input[name='id']").value = todoID;
+
+  submittedForm.replaceWith(newTodoItem);
 }
 
 // TODO: checked nodes sorted to the bottom of the ul they are in, when unchecked move them back into the unchecked section

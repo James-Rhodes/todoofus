@@ -13,7 +13,7 @@
                     <h2 class="todo-description"></h2>
                 </div>
                 <div class="todo-edit-buttons">
-                    <button class="todo-button">Edit</button>
+                    <button class="todo-button" onclick="newEditTodoForm(this.closest('.todo-item'))">Edit</button>
                     <button class="todo-button" onclick="newTodoForm(this.closest('.todo-item').parentNode)">Create</button>
                 </div>
             </div>
@@ -33,6 +33,20 @@
                 </form>
             </ul>
         </template>
+
+        <template id="todo-edit-form-template">
+            <form class="todo-item" onsubmit="editTodo(event)">
+                <div class="todo-contents">
+                    <input type="text" class="todo-description-input" name="description"></input>
+                    <input type="hidden" name="id" value=""></input>
+                </div>
+                <div class="todo-edit-buttons">
+                    <button class="todo-button" type="submit">Okay</button>
+                    <button class="todo-button" type="button" onclick="console.log('DELETE')">Delete</button>
+                </div>
+            </form>
+        </template>
+
 
         <button onclick="newTodoForm(document.getElementById('dummy-first-todo'))">Create</button>
         <div id="all-todos">

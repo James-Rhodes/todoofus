@@ -5,7 +5,9 @@ use sqlx::{
     sqlite::{SqliteConnectOptions, SqlitePoolOptions},
 };
 
-use crate::todos::{TodoForCreate, TodoForSetCompletion, TodoInfo, TodoRelationRow, TodoRow};
+use crate::todos::{
+    TodoForCreate, TodoForSetCompletion, TodoForSetDescription, TodoInfo, TodoRelationRow, TodoRow,
+};
 
 #[derive(Clone)]
 pub struct DB {
@@ -149,7 +151,7 @@ impl DB {
         Ok(TodoInfo::new(todo_rows, parent_children_map))
     }
 
-    pub async fn set_todo_completion(
+    pub async fn set_todo_completed(
         &self,
         todo_for_completion: Vec<TodoForSetCompletion>,
     ) -> anyhow::Result<()> {
@@ -162,6 +164,22 @@ impl DB {
                 .execute(&mut *tx)
                 .await?;
         }
+
+        tx.commit().await?;
+        Ok(())
+    }
+
+    pub async fn set_todo_description(
+        &self,
+        todo_for_description: TodoForSetDescription,
+    ) -> anyhow::Result<()> {
+        let mut tx = self.pool.begin().await?;
+
+        sqlx::query("UPDATE todos SET description = ? WHERE id = ?")
+            .bind(todo_for_description.description)
+            .bind(todo_for_description.id)
+            .execute(&mut *tx)
+            .await?;
 
         tx.commit().await?;
         Ok(())

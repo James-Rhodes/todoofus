@@ -160,7 +160,7 @@ pub struct TodoForSetCompletion {
     pub completed: bool,
 }
 
-pub async fn todo_completion(
+pub async fn set_todo_completed(
     State(db): State<DB>,
     Json(todo_for_set_completion): Json<Vec<TodoForSetCompletion>>,
 ) -> Result<StatusCode, TodoofusError> {
@@ -168,7 +168,24 @@ pub async fn todo_completion(
         "updating completion of todos: {:?}",
         todo_for_set_completion
     );
-    db.set_todo_completion(todo_for_set_completion).await?;
+    db.set_todo_completed(todo_for_set_completion).await?;
+
+    Ok(StatusCode::CREATED)
+}
+
+#[derive(Debug, Deserialize)]
+pub struct TodoForSetDescription {
+    pub id: i64,
+    pub description: String,
+}
+
+pub async fn set_todo_description(
+    State(db): State<DB>,
+    Json(todo_for_set_description): Json<TodoForSetDescription>,
+) -> Result<StatusCode, TodoofusError> {
+    tracing::info!("updating todo description: {:?}", todo_for_set_description);
+
+    db.set_todo_description(todo_for_set_description).await?;
 
     Ok(StatusCode::CREATED)
 }
