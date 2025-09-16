@@ -131,6 +131,7 @@ pub async fn get_all_todos(
     // 1. Get all unfinished todos or todos from the last week or the parent is incomplete
     // 2. Create the tree data structure
 
+    tracing::info!("getting all todos");
     let todo_info = db.get_todo_info_for_display().await?;
 
     Ok((StatusCode::OK, Json(todo_info.into_display())))
@@ -147,6 +148,7 @@ pub async fn create_todo(
     State(db): State<DB>,
     Json(todo_for_create): Json<TodoForCreate>,
 ) -> Result<(StatusCode, Json<TodoRow>), TodoofusError> {
+    tracing::info!("creating todo: {:?}", todo_for_create);
     let new_todo = db.create_todo(todo_for_create).await?;
 
     Ok((StatusCode::CREATED, Json(new_todo)))
@@ -162,6 +164,10 @@ pub async fn todo_completion(
     State(db): State<DB>,
     Json(todo_for_set_completion): Json<Vec<TodoForSetCompletion>>,
 ) -> Result<StatusCode, TodoofusError> {
+    tracing::info!(
+        "updating completion of todos: {:?}",
+        todo_for_set_completion
+    );
     db.set_todo_completion(todo_for_set_completion).await?;
 
     Ok(StatusCode::CREATED)
