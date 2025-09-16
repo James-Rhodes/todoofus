@@ -1,8 +1,13 @@
 <html>
     <head>
-        <script src="index.js" defer></script>
-        <link rel="stylesheet" type="text/css" href="styles.css"> 
-    </head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Todo App</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css" type="text/css">
+    <script src="index.js" defer></script>
+
+</head>
     <body>
         <h1>ToDoofus</h1>
         <template id="todo-template">
@@ -48,7 +53,7 @@
         </template>
 
 
-        <button onclick="newTodoForm(document.getElementById('dummy-first-todo'))">Create</button>
+        <button class="todo-button" onclick="newTodoForm(document.getElementById('dummy-first-todo'))">Create</button>
         <div id="all-todos">
             <div id="dummy-first-todo"></div>
         </div>
