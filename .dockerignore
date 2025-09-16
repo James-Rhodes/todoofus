@@ -1,0 +1,15 @@
+# Rust target folders (already rebuilt in container)
+target/
+
+# Local configuration
+Cargo.lock
+*.rs.bk
+
+# Git
+.git
+.gitignore
+
+# Node / frontend (if any)
+node_modules/
+dist/
+
