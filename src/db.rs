@@ -1,9 +1,11 @@
+use std::collections::HashMap;
+
 use sqlx::{
     SqlitePool,
     sqlite::{SqliteConnectOptions, SqlitePoolOptions},
 };
 
-use crate::todos::{TodoForCreate, TodoItem};
+use crate::todos::{TodoForCreate, TodoInfo, TodoRelationRow, TodoRow};
 
 #[derive(Clone)]
 pub struct DB {
@@ -32,10 +34,10 @@ impl DB {
 
     // Poor mans repository pattern
 
-    pub async fn create_todo(&self, todo_for_create: TodoForCreate) -> anyhow::Result<TodoItem> {
+    pub async fn create_todo(&self, todo_for_create: TodoForCreate) -> anyhow::Result<TodoRow> {
         let mut tx = self.pool.begin().await?;
 
-        let todo_item: TodoItem = sqlx::query_as(
+        let todo_item: TodoRow = sqlx::query_as(
             "INSERT INTO todos(description, completed, created_at) VALUES(?, ?, ?) RETURNING *;",
         )
         .bind(todo_for_create.description)
@@ -54,5 +56,96 @@ impl DB {
 
         tx.commit().await?;
         Ok(todo_item)
+    }
+
+    pub async fn get_todo_info_for_display(&self) -> anyhow::Result<TodoInfo> {
+        // Get all todos that fit any of the following categories:
+        // 1. Unfinished
+        // 2. An ancestor is unfinished
+        // 3. Any from the last week
+
+        let mut con = self.pool.acquire().await?;
+
+        let todo_rows: Vec<TodoRow> = sqlx::query_as(
+            r#"
+            WITH RECURSIVE related_todos(id) AS (
+                -- 1. Base case: start with todos that match condition
+                SELECT t.id
+                FROM todos t
+                WHERE t.completed = 0
+                   OR t.created_at >= ?
+
+                UNION
+
+                -- 2. Walk "upwards" to parents
+                SELECT tr.parent_id
+                FROM todo_relations tr
+                JOIN related_todos rt ON rt.id = tr.child_id
+
+                UNION
+
+                -- 3. Walk "downwards" to children
+                SELECT tr.child_id
+                FROM todo_relations tr
+                JOIN related_todos rt ON rt.id = tr.parent_id
+            )
+            SELECT DISTINCT t.*
+            FROM todos t
+            JOIN related_todos rt ON t.id = rt.id;
+            "#,
+        )
+        .bind(
+            chrono::Utc::now()
+                .checked_sub_days(chrono::Days::new(7))
+                .expect("Should always be able to subtract 7 days from the current date."),
+        )
+        .fetch_all(&mut *con)
+        .await?;
+
+        let todo_relation_rows: Vec<TodoRelationRow> = sqlx::query_as(
+            r#"
+            WITH RECURSIVE related_todos(id) AS (
+                -- 1. Base case: start with todos that match condition
+                SELECT t.id
+                FROM todos t
+                WHERE t.completed = 0
+                   OR t.created_at >= ?
+
+                UNION
+
+                -- 2. Walk "upwards" to parents
+                SELECT tr.parent_id
+                FROM todo_relations tr
+                JOIN related_todos rt ON rt.id = tr.child_id
+
+                UNION
+
+                -- 3. Walk "downwards" to children
+                SELECT tr.child_id
+                FROM todo_relations tr
+                JOIN related_todos rt ON rt.id = tr.parent_id
+            )
+            SELECT * FROM todo_relations tr
+            WHERE parent_id IN (SELECT id FROM related_todos) AND child_id IN (SELECT id FROM related_todos);
+            "#,
+        )
+        .bind(
+            chrono::Utc::now()
+                .checked_sub_days(chrono::Days::new(7))
+                .expect("Should always be able to subtract 7 days from the current date."),
+        )
+        .fetch_all(&mut *con)
+        .await?;
+
+        let mut parent_children_map = HashMap::new();
+        for todo_relation in todo_relation_rows {
+            let children = parent_children_map
+                .entry(todo_relation.parent_id())
+                .or_insert(Vec::new());
+
+            children.push(todo_relation.child_id());
+        }
+
+        Ok(TodoInfo::new(todo_rows, parent_children_map))
     }
 }

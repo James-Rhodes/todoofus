@@ -1,6 +1,28 @@
 const todoTemplate = document.getElementById("todo-template");
 const todoFormTemplate = document.getElementById("todo-form-template");
 
+window.addEventListener("load", async (event) => {
+  let todos;
+  try {
+    const response = await fetch("/todos");
+    todos = await response.json();
+  } catch (e) {
+    console.error("Failed to create Todo item: ", e);
+    return;
+  }
+
+  const todo_container = document.getElementById("all-todos");
+  for (todo of todos) {
+    const todoElement = createTodoElement(
+      todo.id,
+      todo.description,
+      todo.children,
+    );
+
+    todo_container.appendChild(todoElement);
+  }
+});
+
 // Places the form immediately after the refNode
 function newTodoForm(refNode) {
   let parentId = "";
@@ -17,6 +39,26 @@ function removeTodoForm(formElement) {
   formElement.remove();
 }
 
+function createTodoElement(id, todoDescription, childTodos) {
+  const newTodo = document.createElement("ul");
+
+  const listItem = document.createElement("li");
+  listItem.appendChild(todoTemplate.content.cloneNode(true));
+  newTodo.appendChild(listItem);
+
+  newTodo.querySelector(".todo-description").textContent = todoDescription;
+
+  newTodo.querySelector("input[name='id']").value = id;
+
+  for (child of childTodos) {
+    newTodo.appendChild(
+      createTodoElement(child.id, child.description, child.children),
+    );
+  }
+
+  return newTodo;
+}
+
 async function createTodo(event) {
   event.preventDefault();
 
@@ -26,16 +68,9 @@ async function createTodo(event) {
   );
   parentId = isNaN(parentId) ? undefined : parentId; // If the value is empty then set it to undefined
 
-  const newTodo = document.createElement("ul");
-  const listItem = document.createElement("li");
-
-  listItem.appendChild(todoTemplate.content.cloneNode(true));
   const todoDescription = submittedForm.querySelector(
     ".todo-description-input",
   ).value;
-  newTodo.appendChild(listItem);
-
-  newTodo.querySelector(".todo-description").textContent = todoDescription;
 
   let newTodoId = undefined;
   try {
@@ -50,13 +85,13 @@ async function createTodo(event) {
 
     const json_resp = await response.json();
     newTodoId = json_resp.id;
+    console.log("Created new Todo with ID: ", newTodoId);
   } catch (e) {
     console.error("Failed to create Todo item: ", e);
     return;
   }
 
-  console.log("NEW TODO WITH ID: ", newTodoId);
-  newTodo.querySelector("input[name='id']").value = newTodoId;
+  const newTodo = createTodoElement(newTodoId, todoDescription, []);
   submittedForm.closest(".todo-form").replaceWith(newTodo);
 }
 
@@ -78,4 +113,3 @@ function toggleTodoItemRecursively(parentTodo) {
 }
 
 // TODO: checked nodes sorted to the bottom of the ul they are in, when unchecked move them back into the unchecked section
-// TODO: Server should show all todo's from the last X days. Even if they are completed. So they can be unticked as necessary
