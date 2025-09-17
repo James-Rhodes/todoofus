@@ -99,8 +99,7 @@ impl TodoInfo {
             None => Vec::new(), // Leaf node so there are no children
         };
 
-        children.sort_by_key(|child| child.created_at);
-        children.reverse();
+        children.sort_by_key(|child| (child.completed, std::cmp::Reverse(child.created_at)));
 
         TodoForDisplay {
             id: todo_row.id,
@@ -117,8 +116,9 @@ impl TodoInfo {
         let mut tree: Vec<TodoForDisplay> =
             root_nodes.iter().map(|id| self.build_tree(*id)).collect();
 
-        tree.sort_by_key(|root_node| root_node.created_at);
-        tree.reverse();
+        tree.sort_by_key(|root_node| {
+            (root_node.completed, std::cmp::Reverse(root_node.created_at))
+        });
 
         tree
     }
