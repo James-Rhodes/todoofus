@@ -23,6 +23,7 @@ window.addEventListener("load", async (event) => {
 
     todo_container.appendChild(todoElement);
   }
+  adjustLineHeights();
 });
 
 // Places the form immediately after the refNode
@@ -39,6 +40,7 @@ function newTodoForm(refNode) {
 
 function removeTodoForm(formElement) {
   formElement.remove();
+  adjustLineHeights();
 }
 
 function createTodoElement(id, todoDescription, todoCompleted, childTodos) {
@@ -101,6 +103,8 @@ async function createTodo(event) {
 
   const newTodo = createTodoElement(newTodoId, todoDescription, false, []);
   submittedForm.closest(".todo-form").replaceWith(newTodo);
+
+  adjustLineHeights();
 }
 
 function getChildrenTodoItems(parentTodo) {
@@ -191,6 +195,8 @@ async function editTodo(event) {
   newTodoItem.querySelector("input[name='id']").value = todoID;
 
   submittedForm.replaceWith(newTodoItem);
+
+  adjustLineHeights();
 }
 
 async function deleteTodo(todoItem) {
@@ -219,6 +225,28 @@ async function deleteTodo(todoItem) {
   // Update DOM
   const treeUL = todoItem.parentElement.parentElement;
   treeUL.remove();
+
+  adjustLineHeights();
+}
+
+function adjustLineHeights() {
+  const lis = document.querySelectorAll("ul ul li");
+  for (curr of lis) {
+    const sibCheckbox =
+      curr.parentElement.previousElementSibling.querySelector(".todo-checkbox");
+
+    const currRect = curr.getBoundingClientRect();
+    const currY = currRect.top + currRect.height / 2;
+    const currHeight = currRect.height;
+
+    const sibRect = sibCheckbox.getBoundingClientRect();
+    const sibY = sibRect.top + sibRect.height / 2;
+
+    const lineHeight = currY - sibRect.top - 5;
+
+    curr.style.setProperty("--line-height", `${lineHeight}px`);
+    curr.style.setProperty("--top-shift", `-${lineHeight - currHeight / 2}px`);
+  }
 }
 
 // TODO: checked nodes sorted to the bottom of the ul they are in, when unchecked move them back into the unchecked section

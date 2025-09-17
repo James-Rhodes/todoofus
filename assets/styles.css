@@ -15,7 +15,7 @@ body {
 .todo-item {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     transition: background-color 0.2s, transform 0.2s;
 }
 
@@ -26,7 +26,7 @@ body {
 
 .todo-contents {
     display: flex;
-    align-items: baseline;
+    align-items: center;
 }
 
 .todo-edit-buttons {
@@ -63,6 +63,7 @@ body {
     height: 24px;
     accent-color: var(--accent-color);
     border-radius: 50%;
+    flex-shrink: 0;
 }
 
 h1 {
@@ -76,7 +77,6 @@ h2 {
 
 ul {
     list-style-type: none;
-    padding-left: 1.7remrem;
     margin: 0;
 }
 
@@ -89,7 +89,11 @@ ul {
 ul li {
     position: relative;
     margin: 5px 0;
-    background: var(--bg-color);
+}
+
+ul ul li {
+    --top-shift: -1.5rem;
+    --line-height: 2.5rem;
 }
 
 ul ul li::before {
@@ -97,9 +101,9 @@ ul ul li::before {
     position: absolute;
     display: block;
     content: "";
-    width: 2rem;
-    height: 2.5rem;
-    top: -1.5rem;
+    width: 1.2rem;
+    height: var(--line-height);
+    top: var(--top-shift);
     left: -1.5rem;
     border-left: 2px solid var(--line-color);
     border-bottom: 2px solid var(--line-color);
