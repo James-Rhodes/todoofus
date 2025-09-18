@@ -36,6 +36,10 @@ function newTodoForm(refNode) {
   const template = todoFormTemplate.content.cloneNode(true);
   template.querySelector("input[name='parent_id']").value = parentId;
   refNode.after(template);
+  const descriptionInput = refNode.nextElementSibling.querySelector(
+    "input[name='description']",
+  );
+  descriptionInput.focus(); // Focus for immediate typing
 }
 
 function removeTodoForm(formElement) {
@@ -153,10 +157,17 @@ function newEditTodoForm(todoElement) {
   );
   const todoID = todoElement.querySelector("input[name='id']").value;
 
-  editForm.querySelector("input[name='description']").value = todoDescription;
+  const descriptionInput = editForm.querySelector("input[name='description']");
+  descriptionInput.value = todoDescription;
   editForm.querySelector("input[name='id']").value = todoID;
 
   todoElement.replaceWith(editForm);
+  // Focus the description input and move cursor to the end
+  descriptionInput.focus();
+  if (descriptionInput.setSelectionRange) {
+    const length = descriptionInput.value.length;
+    descriptionInput.setSelectionRange(length, length);
+  }
 }
 
 async function editTodo(event) {
