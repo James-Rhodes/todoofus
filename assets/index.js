@@ -2,7 +2,7 @@ const todoTemplate = document.getElementById("todo-template");
 const todoFormTemplate = document.getElementById("todo-form-template");
 const todoEditFormTemplate = document.getElementById("todo-edit-form-template");
 
-window.addEventListener("load", async (event) => {
+window.addEventListener("load", async () => {
   let todos;
   try {
     const response = await fetch("/todos");
@@ -13,7 +13,7 @@ window.addEventListener("load", async (event) => {
   }
 
   const todo_container = document.getElementById("all-todos");
-  for (todo of todos) {
+  for (const todo of todos) {
     const todoElement = createTodoElement(
       todo.id,
       todo.description,
@@ -50,7 +50,8 @@ function createTodoElement(id, todoDescription, todoCompleted, childTodos) {
   listItem.appendChild(todoTemplate.content.cloneNode(true));
   newTodo.appendChild(listItem);
 
-  newTodo.querySelector(".todo-description").textContent = todoDescription;
+  newTodo.querySelector(".todo-description").innerHTML =
+    markdownLinksToHtml(todoDescription);
 
   newTodo.querySelector("input[name='id']").value = id;
   newTodo.querySelector(".todo-checkbox").checked = todoCompleted;
@@ -147,8 +148,9 @@ async function toggleTodoItemRecursively(parentTodo) {
 function newEditTodoForm(todoElement) {
   const editForm = todoEditFormTemplate.content.cloneNode(true);
 
-  const todoDescription =
-    todoElement.querySelector(".todo-description").innerText;
+  const todoDescription = htmlLinksToMarkdown(
+    todoElement.querySelector(".todo-description").innerHTML,
+  );
   const todoID = todoElement.querySelector("input[name='id']").value;
 
   editForm.querySelector("input[name='description']").value = todoDescription;
@@ -191,7 +193,8 @@ async function editTodo(event) {
   // Update DOM
   const newTodo = todoTemplate.content.cloneNode(true);
   const newTodoItem = newTodo.querySelector(".todo-item");
-  newTodoItem.querySelector(".todo-description").innerText = newDescription;
+  newTodoItem.querySelector(".todo-description").innerHTML =
+    markdownLinksToHtml(newDescription);
   newTodoItem.querySelector("input[name='id']").value = todoID;
 
   submittedForm.replaceWith(newTodoItem);
@@ -231,7 +234,7 @@ async function deleteTodo(todoItem) {
 
 function adjustLineHeights() {
   const lis = document.querySelectorAll("ul ul li");
-  for (curr of lis) {
+  for (const curr of lis) {
     const sibCheckbox =
       curr.parentElement.previousElementSibling.querySelector(".todo-checkbox");
 
@@ -240,13 +243,22 @@ function adjustLineHeights() {
     const currHeight = currRect.height;
 
     const sibRect = sibCheckbox.getBoundingClientRect();
-    const sibY = sibRect.top + sibRect.height / 2;
 
     const lineHeight = currY - sibRect.top - 5;
 
     curr.style.setProperty("--line-height", `${lineHeight}px`);
     curr.style.setProperty("--top-shift", `-${lineHeight - currHeight / 2}px`);
   }
+}
+
+function markdownLinksToHtml(text) {
+  return text.replace(
+    /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
+  );
+}
+function htmlLinksToMarkdown(html) {
+  return html.replace(/<a\s+href="([^"]+)"[^>]*>(.*?)<\/a>/g, "[$2]($1)");
 }
 
 // TODO: checked nodes sorted to the bottom of the ul they are in, when unchecked move them back into the unchecked section
