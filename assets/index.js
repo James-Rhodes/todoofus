@@ -248,6 +248,9 @@ function adjustLineHeights() {
   for (const curr of lis) {
     const sibCheckbox =
       curr.parentElement.previousElementSibling.querySelector(".todo-checkbox");
+    if (sibCheckbox == null) {
+      continue;
+    }
 
     const currRect = curr.getBoundingClientRect();
     const currY = currRect.top + currRect.height / 2;
