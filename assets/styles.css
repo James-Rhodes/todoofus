@@ -137,3 +137,18 @@ input[type="text"]::focus {
     transform: translateY(-1px);
 }
 
+.todo-description a {
+    color: var(--accent-color);
+    text-decoration: none;
+    transition: color 0.2s, text-shadow 0.2s;
+}
+
+.todo-description a:hover {
+    color: var(--accent-hover);
+    text-shadow: 0 0 4px rgba(187, 134, 252, 0.6); /* subtle glow effect */
+}
+
+.todo-description a:active {
+    color: #7b46c8; /* same as button active color */
+    text-shadow: none;
+}
