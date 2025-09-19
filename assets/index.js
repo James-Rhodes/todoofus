@@ -2,6 +2,8 @@ const todoTemplate = document.getElementById("todo-template");
 const todoFormTemplate = document.getElementById("todo-form-template");
 const todoEditFormTemplate = document.getElementById("todo-edit-form-template");
 
+const DOUBLE_CLICK_DELAY = 200; // milliseconds
+
 window.addEventListener("load", async () => {
   let todos;
   try {
@@ -14,7 +16,7 @@ window.addEventListener("load", async () => {
 
   const todo_container = document.getElementById("all-todos");
   for (const todo of todos) {
-    const todoElement = createTodoElement(
+    const todoElement = createTodoTree(
       todo.id,
       todo.description,
       todo.completed,
@@ -47,12 +49,8 @@ function removeTodoForm(formElement) {
   adjustLineHeights();
 }
 
-function createTodoElement(id, todoDescription, todoCompleted, childTodos) {
-  const newTodo = document.createElement("ul");
-
-  const listItem = document.createElement("li");
-  listItem.appendChild(todoTemplate.content.cloneNode(true));
-  newTodo.appendChild(listItem);
+function createTodoElement(id, todoDescription, todoCompleted) {
+  const newTodo = todoTemplate.content.cloneNode(true);
 
   newTodo.querySelector(".todo-description").innerHTML =
     markdownLinksToHtml(todoDescription);
@@ -60,9 +58,49 @@ function createTodoElement(id, todoDescription, todoCompleted, childTodos) {
   newTodo.querySelector("input[name='id']").value = id;
   newTodo.querySelector(".todo-checkbox").checked = todoCompleted;
 
+  const content = newTodo.querySelector(".todo-contents");
+
+  let clickTimer = null;
+  content.addEventListener("click", (event) => {
+    console.log(event.target.tagName);
+    const clickedTagName = event.target.tagName.toLowerCase();
+    if (clickedTagName === "a" || clickedTagName === "input") {
+      return; // We want to still allow clicking anchor tags and clicking checkbox
+    }
+
+    if (clickTimer != null) {
+      // This was a double click
+      clearTimeout(clickTimer);
+      clickTimer = null;
+
+      console.log("Double Click");
+      newTodoForm(event.target.closest(".todo-item").parentNode); // On double click we create a new todo
+      return;
+    }
+
+    clickTimer = setTimeout(() => {
+      // Single click
+      clickTimer = null;
+
+      console.log("Single Click");
+      newEditTodoForm(event.target.closest(".todo-item")); // On single click we edit the current todo
+    }, DOUBLE_CLICK_DELAY);
+  });
+
+  return newTodo;
+}
+
+function createTodoTree(id, todoDescription, todoCompleted, childTodos) {
+  const todoTreeRoot = document.createElement("ul");
+
+  const listItem = document.createElement("li");
+  const newTodo = createTodoElement(id, todoDescription, todoCompleted);
+  listItem.appendChild(newTodo);
+  todoTreeRoot.appendChild(listItem);
+
   for (child of childTodos) {
-    newTodo.appendChild(
-      createTodoElement(
+    todoTreeRoot.appendChild(
+      createTodoTree(
         child.id,
         child.description,
         child.completed,
@@ -71,7 +109,7 @@ function createTodoElement(id, todoDescription, todoCompleted, childTodos) {
     );
   }
 
-  return newTodo;
+  return todoTreeRoot;
 }
 
 async function createTodo(event) {
@@ -106,7 +144,7 @@ async function createTodo(event) {
     return;
   }
 
-  const newTodo = createTodoElement(newTodoId, todoDescription, false, []);
+  const newTodo = createTodoTree(newTodoId, todoDescription, false, []);
   submittedForm.closest(".todo-form").replaceWith(newTodo);
 
   adjustLineHeights();
@@ -205,14 +243,13 @@ async function editTodo(event) {
   }
 
   // Update DOM
-  const newTodo = todoTemplate.content.cloneNode(true);
-  const newTodoItem = newTodo.querySelector(".todo-item");
-  newTodoItem.querySelector(".todo-description").innerHTML =
-    markdownLinksToHtml(todo_json.description);
-  newTodoItem.querySelector("input[name='id']").value = todo_json.id;
-  newTodoItem.querySelector(".todo-checkbox").checked = todo_json.completed;
+  const newTodo = createTodoElement(
+    todo_json.id,
+    todo_json.description,
+    todo_json.completed,
+  );
 
-  submittedForm.replaceWith(newTodoItem);
+  submittedForm.replaceWith(newTodo);
 
   adjustLineHeights();
 }
