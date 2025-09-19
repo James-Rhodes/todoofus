@@ -293,16 +293,22 @@ function adjustLineHeights() {
       continue;
     }
 
-    const currRect = curr.getBoundingClientRect();
+    const currRect = curr
+      .querySelector(".todo-checkbox")
+      .getBoundingClientRect();
     const currY = currRect.top + currRect.height / 2;
     const currHeight = currRect.height;
 
     const sibRect = sibCheckbox.getBoundingClientRect();
+    const sibY = sibRect.top + sibRect.height / 2;
 
-    const lineHeight = currY - sibRect.top - 5;
+    const lineHeight = currY - sibY;
 
     curr.style.setProperty("--line-height", `${lineHeight}px`);
-    curr.style.setProperty("--top-shift", `-${lineHeight - currHeight / 2}px`);
+    curr.style.setProperty(
+      "--top-shift",
+      `-${lineHeight - currHeight + currRect.height / 2 - 3}px`,
+    );
   }
 }
 

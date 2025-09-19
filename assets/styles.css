@@ -26,7 +26,6 @@ body {
 
 .todo-contents {
     display: flex;
-    align-items: center;
 }
 
 .todo-edit-buttons {
