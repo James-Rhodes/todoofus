@@ -182,12 +182,12 @@ pub struct TodoForSetDescription {
 pub async fn set_todo_description(
     State(db): State<DB>,
     Json(todo_for_set_description): Json<TodoForSetDescription>,
-) -> Result<StatusCode, TodoofusError> {
+) -> Result<(StatusCode, Json<TodoRow>), TodoofusError> {
     tracing::info!("updating todo description: {:?}", todo_for_set_description);
 
-    db.set_todo_description(todo_for_set_description).await?;
+    let todo_row = db.set_todo_description(todo_for_set_description).await?;
 
-    Ok(StatusCode::OK)
+    Ok((StatusCode::OK, Json(todo_row)))
 }
 
 #[derive(Debug, Deserialize)]

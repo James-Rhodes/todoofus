@@ -184,6 +184,7 @@ async function editTodo(event) {
   );
 
   // Send to DB
+  let todo_json;
   try {
     const response = await fetch("/todos/description", {
       method: "PATCH",
@@ -193,8 +194,10 @@ async function editTodo(event) {
     if (!response.ok) {
       throw `server responded ${response.status}: ${response.statusText}`;
     }
+
+    todo_json = await response.json();
     console.log(
-      `Updated todo ${todoID} with new description ${newDescription}`,
+      `Updated todo ${todo_json.id} with new description ${todo_json.description}`,
     );
   } catch (e) {
     console.error("Failed to update Todo description: ", e);
@@ -205,8 +208,9 @@ async function editTodo(event) {
   const newTodo = todoTemplate.content.cloneNode(true);
   const newTodoItem = newTodo.querySelector(".todo-item");
   newTodoItem.querySelector(".todo-description").innerHTML =
-    markdownLinksToHtml(newDescription);
-  newTodoItem.querySelector("input[name='id']").value = todoID;
+    markdownLinksToHtml(todo_json.description);
+  newTodoItem.querySelector("input[name='id']").value = todo_json.id;
+  newTodoItem.querySelector(".todo-checkbox").checked = todo_json.completed;
 
   submittedForm.replaceWith(newTodoItem);
 

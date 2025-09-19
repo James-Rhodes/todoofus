@@ -178,17 +178,17 @@ impl DB {
     pub async fn set_todo_description(
         &self,
         todo_for_description: TodoForSetDescription,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<TodoRow> {
         let mut tx = self.pool.begin().await?;
 
-        sqlx::query("UPDATE todos SET description = ? WHERE id = ?")
+        let todo_row = sqlx::query_as("UPDATE todos SET description = ? WHERE id = ? RETURNING *;")
             .bind(todo_for_description.description)
             .bind(todo_for_description.id)
-            .execute(&mut *tx)
+            .fetch_one(&mut *tx)
             .await?;
 
         tx.commit().await?;
-        Ok(())
+        Ok(todo_row)
     }
 
     pub async fn delete_todo_recursively(
