@@ -266,6 +266,22 @@ function getChildrenTodoItems(parentTodo) {
 }
 
 /**
+ * @param {HTMLElement} todoElement
+ * @returns {Element[]}
+ */
+function getSiblingTodos(todoElement) {
+  const siblingTodos =
+    todoElement.parentElement?.parentElement?.parentElement?.children; // The todo item is in a li, which must also be in a ul
+  if (!siblingTodos) {
+    throw "failed to get sibling todos";
+  }
+
+  const ret = Array.from(siblingTodos);
+  ret.shift(); // Remove the first element because it is actually the parent of these todos.
+  return ret;
+}
+
+/**
  * @param {HTMLElement} parentTodo
  */
 async function toggleTodoItemRecursively(parentTodo) {
@@ -311,8 +327,123 @@ async function toggleTodoItemRecursively(parentTodo) {
     }
     checkBoxElement.checked = checked;
   }
+
+  if (checked) {
+    // Move to the bottom if we just checked it
+    animateTodoCheck(parentTodo, "bottom");
+  } else {
+    // Move to the top if we just unchecked it
+    animateTodoCheck(parentTodo, "top");
+  }
 }
 
+/**
+ * @param {HTMLElement} todoElement
+ * @param {"top" | "bottom"} newPosition
+ */
+function animateTodoCheck(todoElement, newPosition) {
+  //TODO: Make the animation put the todos in the right spot not just top and bottom
+  const siblingTodos = getSiblingTodos(todoElement);
+  const pickedTodoUL = todoElement.closest("ul");
+  if (!pickedTodoUL) {
+    throw "failed to get picked todo";
+  }
+
+  const parentUL = pickedTodoUL.parentElement;
+  if (!parentUL) {
+    throw "failed to get parent UL";
+  }
+
+  // Step 1: record first positions
+  const firstRecs = new Map();
+  siblingTodos.forEach((el) => {
+    firstRecs.set(el, el.getBoundingClientRect());
+  });
+
+  // Step 2: move the picked todo UL
+  if (newPosition == "top") {
+    if (pickedTodoUL === siblingTodos[0]) {
+      // We are already at the top so no animation needed
+      return;
+    }
+
+    const liElement = parentUL.firstElementChild; // The first element of the list is actually the parent todo text in a LI
+    if (!(liElement instanceof HTMLElement)) {
+      throw "first element does not exist";
+    }
+    parentUL.insertBefore(pickedTodoUL, liElement?.nextElementSibling);
+  } else {
+    if (pickedTodoUL === siblingTodos[siblingTodos.length - 1]) {
+      // We are already at the bottom so no animation needed
+      return;
+    }
+    parentUL.appendChild(pickedTodoUL);
+  }
+
+  // Step 3: apply inverted transforms
+  siblingTodos.forEach((el) => {
+    if (!(el instanceof HTMLElement)) throw "list item is not an HTMLElement";
+
+    const lastRect = el.getBoundingClientRect();
+    const firstRect = firstRecs.get(el);
+    const dx = firstRect.left - lastRect.left;
+    const dy = firstRect.top - lastRect.top;
+
+    el.style.transform = `translate(${dx}px, ${dy}px)`;
+    el.style.transition = "transform 0s"; // no animation yet
+  });
+
+  // Step 4: animate to final positions and wait for completion
+  /**
+   * Animate sibling todos and resolve when finished.
+   * @param {HTMLElement[]} siblings - The elements to animate
+   * @param {number} [duration=300] - Animation duration in ms
+   * @returns {Promise<void>} Resolves when all animations are finished
+   */
+  function animateSiblings(siblings, duration = 300) {
+    return new Promise((resolve) => {
+      let remaining = siblings.length;
+      if (remaining === 0) {
+        resolve();
+        return;
+      }
+
+      /**
+       * @param {any} event
+       */
+      function onTransitionEnd(event) {
+        if (event.propertyName !== "transform") return;
+
+        event.target.removeEventListener("transitionend", onTransitionEnd);
+        remaining--;
+
+        if (remaining === 0) {
+          resolve();
+        }
+      }
+
+      siblings.forEach((el) => {
+        el.addEventListener("transitionend", onTransitionEnd);
+
+        // trigger animation in next frame
+        requestAnimationFrame(() => {
+          el.style.transition = `transform ${duration}ms ease`;
+          el.style.transform = "none";
+        });
+      });
+
+      // fallback in case transitionend doesn't fire (e.g., zero movement)
+      setTimeout(() => {
+        if (remaining > 0) resolve();
+      }, duration + 50);
+    });
+  }
+
+  // Step 5: run animation and adjust line heights after all finished
+  animateSiblings(/**@type {HTMLElement[]}*/ (siblingTodos)).then(() => {
+    adjustLineHeights();
+  });
+}
 /**
  * @param {HTMLElement} todoElement
  */
@@ -539,5 +670,3 @@ function htmlLinksToMarkdown(html) {
 
   return html.replace(/<a\s+href="([^"]+)"[^>]*>(.*?)<\/a>/g, "[$2]($1)");
 }
-
-// TODO: checked nodes sorted to the bottom of the ul they are in, when unchecked move them back into the unchecked section
