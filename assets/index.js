@@ -39,7 +39,7 @@ function newTodoForm(refNode) {
   template.querySelector("input[name='parent_id']").value = parentId;
   refNode.after(template);
   const descriptionInput = refNode.nextElementSibling.querySelector(
-    "input[name='description']",
+    "[name='description']",
   );
   descriptionInput.focus(); // Focus for immediate typing
 }
@@ -190,22 +190,41 @@ async function toggleTodoItemRecursively(parentTodo) {
 function newEditTodoForm(todoElement) {
   const editForm = todoEditFormTemplate.content.cloneNode(true);
 
+  const todoID = todoElement.querySelector("input[name='id']").value;
+  editForm.querySelector("input[name='id']").value = todoID;
+
   const todoDescription = htmlLinksToMarkdown(
     todoElement.querySelector(".todo-description").innerHTML,
   );
-  const todoID = todoElement.querySelector("input[name='id']").value;
-
-  const descriptionInput = editForm.querySelector("input[name='description']");
+  const descriptionInput = editForm.querySelector("[name='description']");
   descriptionInput.value = todoDescription;
-  editForm.querySelector("input[name='id']").value = todoID;
+
+  const todoBbox = todoElement.getBoundingClientRect();
+  const submitButtons = editForm.querySelector(".todo-edit-buttons");
 
   todoElement.replaceWith(editForm);
+
+  // Set the size to match the old space that was taken up
+  const buttonBbox = submitButtons.getBoundingClientRect();
+  descriptionInput.style.width = todoBbox.width - buttonBbox.width + "px";
+  descriptionInput.style.height = todoBbox.height + "px";
+
   // Focus the description input and move cursor to the end
   descriptionInput.focus();
   if (descriptionInput.setSelectionRange) {
     const length = descriptionInput.value.length;
     descriptionInput.setSelectionRange(length, length);
   }
+
+  // Make the text area submit form on enter key
+  const formElement = descriptionInput.closest(".todo-item");
+  formElement.style.width = todoBbox.width;
+  formElement.style.height = todoBbox.height;
+  descriptionInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      formElement.requestSubmit();
+    }
+  });
 }
 
 async function editTodo(event) {
@@ -214,7 +233,7 @@ async function editTodo(event) {
   const submittedForm = event.target;
 
   const newDescription = submittedForm.querySelector(
-    "input[name='description']",
+    "[name='description']",
   ).value;
 
   const todoID = parseInt(

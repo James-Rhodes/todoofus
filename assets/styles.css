@@ -151,3 +151,25 @@ input[type="text"]::focus {
     color: #7b46c8; /* same as button active color */
     text-shadow: none;
 }
+
+.todo-description-input {
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  resize: none;      /* user can't drag to resize */
+  overflow: hidden;  /* hide scrollbars */
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 16px;
+  font-family: "Segoe UI", Roboto, sans-serif;
+  color: #fff;
+  background-color: #1e1e1e;     
+  border: 2px solid var(--accent-color)
+  border-radius: 8px;           
+  outline: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.1s;
+}
+
