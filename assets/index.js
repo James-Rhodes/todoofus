@@ -361,6 +361,7 @@ function animateTodoCheck(todoElement, newPosition) {
   });
 
   // Step 2: move the picked todo UL
+  let movingElementLI = null;
   if (newPosition == "top") {
     if (pickedTodoUL === siblingTodos[0]) {
       // We are already at the top so no animation needed
@@ -376,6 +377,12 @@ function animateTodoCheck(todoElement, newPosition) {
     if (pickedTodoUL === siblingTodos[siblingTodos.length - 1]) {
       // We are already at the bottom so no animation needed
       return;
+    }
+    for (const sibUL of siblingTodos) {
+      if (sibUL !== pickedTodoUL) {
+        movingElementLI = sibUL.firstElementChild;
+        break;
+      }
     }
     parentUL.appendChild(pickedTodoUL);
   }
@@ -393,7 +400,18 @@ function animateTodoCheck(todoElement, newPosition) {
     el.style.transition = "transform 0s"; // no animation yet
   });
 
-  // Step 4: animate to final positions and wait for completion
+  // Step 4: remove the tree line for the current picked element
+  const innerPickedTodoLI = pickedTodoUL.firstElementChild;
+  if (!(innerPickedTodoLI instanceof HTMLElement)) {
+    throw "pickedTodoLI not a HTMLElement";
+  }
+  innerPickedTodoLI.style.setProperty("--display", "none");
+  if (movingElementLI && movingElementLI instanceof HTMLElement) {
+    // We also want to make the first first moving remove its line too so it doesn't go above the checkbox
+    movingElementLI.style.setProperty("--display", "none");
+  }
+
+  // Step 5: animate to final positions and wait for completion
   /**
    * Animate sibling todos and resolve when finished.
    * @param {HTMLElement[]} siblings - The elements to animate
@@ -441,6 +459,11 @@ function animateTodoCheck(todoElement, newPosition) {
 
   // Step 5: run animation and adjust line heights after all finished
   animateSiblings(/**@type {HTMLElement[]}*/ (siblingTodos)).then(() => {
+    innerPickedTodoLI.style.setProperty("--display", "block");
+    if (movingElementLI && movingElementLI instanceof HTMLElement) {
+      // We also want to add back the moved element line
+      movingElementLI.style.setProperty("--display", "block");
+    }
     adjustLineHeights();
   });
 }

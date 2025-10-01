@@ -93,12 +93,13 @@ ul li {
 ul ul li {
     --top-shift: -1.5rem;
     --line-height: 2.5rem;
+    --display: block;
 }
 
 ul ul li::before {
     z-index: -100;
     position: absolute;
-    display: block;
+    display: var(--display);
     content: "";
     width: 1.2rem;
     height: var(--line-height);
