@@ -531,6 +531,7 @@ function newEditTodoForm(todoElement) {
   formElement.style.height = todoBbox.height + "";
   descriptionInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
+      event.preventDefault(); // Stop new line from actually showing up in the text area
       formElement.requestSubmit();
     }
   });
