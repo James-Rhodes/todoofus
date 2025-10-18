@@ -13,27 +13,7 @@ const todoEditFormTemplate = /** @type {HTMLTemplateElement} */ (
 const DOUBLE_CLICK_DELAY = 200; // milliseconds
 
 window.addEventListener("load", async () => {
-  let todos;
-  try {
-    const response = await fetch("/todos");
-    todos = await response.json();
-  } catch (e) {
-    console.error("Failed to create Todo item: ", e);
-    return;
-  }
-
-  const todo_container = document.getElementById("all-todos");
-  for (const todo of todos) {
-    const todoElement = createTodoTree(
-      todo.id,
-      todo.description,
-      todo.completed,
-      todo.children,
-    );
-
-    todo_container?.appendChild(todoElement);
-  }
-  adjustLineHeights();
+  await populateTodos(7);
 });
 
 /** Places the form immediately after the refNode
@@ -693,4 +673,66 @@ function htmlLinksToMarkdown(html) {
   }
 
   return html.replace(/<a\s+href="([^"]+)"[^>]*>(.*?)<\/a>/g, "[$2]($1)");
+}
+
+/**
+ * @param {number} numDays
+ */
+async function populateTodos(numDays) {
+  // Get todos from server
+  let todos;
+  try {
+    const params = new URLSearchParams({
+      num_todos: numDays.toString(),
+    });
+    const response = await fetch(`/todos?${params.toString()}`);
+    todos = await response.json();
+  } catch (e) {
+    console.error("Failed to create Todo item: ", e);
+    return;
+  }
+
+  // Clear all todos that are already there.
+  const allTodoDiv = document.getElementById("all-todos");
+  if (allTodoDiv === null) {
+    console.error("All todo div not on page. This should never happen.");
+    return;
+  }
+  const rootTodos = Array.from(allTodoDiv.children);
+  for (const todo of rootTodos) {
+    if (todo.id === "dummy-first-todo") {
+      continue;
+    }
+    todo.remove();
+  }
+
+  // Create the new todos
+  const todo_container = document.getElementById("all-todos");
+  for (const todo of todos) {
+    const todoElement = createTodoTree(
+      todo.id,
+      todo.description,
+      todo.completed,
+      todo.children,
+    );
+
+    todo_container?.appendChild(todoElement);
+  }
+  adjustLineHeights();
+}
+
+/**
+ * @param {InputEvent} event
+ */
+async function changeNumDaysForTodos(event) {
+  const selectElement = /** @type {HTMLSelectElement} */ (event.target);
+  const newNumDays = parseInt(selectElement.value);
+  if (isNaN(newNumDays)) {
+    console.error(
+      `The value: ${selectElement.value} is not parseable as a number`,
+    );
+    return;
+  }
+
+  await populateTodos(newNumDays);
 }

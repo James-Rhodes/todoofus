@@ -66,7 +66,7 @@ impl DB {
         Ok(todo_item)
     }
 
-    pub async fn get_todo_info_for_display(&self) -> anyhow::Result<TodoInfo> {
+    pub async fn get_todo_info_for_display(&self, num_days: u64) -> anyhow::Result<TodoInfo> {
         // Get all todos that fit any of the following categories:
         // 1. Unfinished
         // 2. An ancestor is unfinished
@@ -104,8 +104,8 @@ impl DB {
         )
         .bind(
             chrono::Utc::now()
-                .checked_sub_days(chrono::Days::new(7))
-                .expect("Should always be able to subtract 7 days from the current date."),
+                .checked_sub_days(chrono::Days::new(num_days))
+                .ok_or_else(|| anyhow::anyhow!("failed to subtract {num_days} from current day"))?,
         )
         .fetch_all(&mut *con)
         .await?;
@@ -139,8 +139,8 @@ impl DB {
         )
         .bind(
             chrono::Utc::now()
-                .checked_sub_days(chrono::Days::new(7))
-                .expect("Should always be able to subtract 7 days from the current date."),
+                .checked_sub_days(chrono::Days::new(num_days))
+                .ok_or_else(|| anyhow::anyhow!("failed to subtract {num_days} from current day"))?,
         )
         .fetch_all(&mut *con)
         .await?;

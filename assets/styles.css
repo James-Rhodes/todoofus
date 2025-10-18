@@ -174,3 +174,47 @@ input[type="text"]::focus {
   transition: border-color 0.2s, box-shadow 0.2s, transform 0.1s;
 }
 
+#num-days {
+    background-color: #1e1e1e;        /* matches input background */
+    color: #fff;                       /* text color */
+    border: 2px solid var(--accent-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 16px;
+    font-family: "Segoe UI", Roboto, sans-serif;
+    outline: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.1s;
+    appearance: none;                  /* remove default arrow in most browsers */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+}
+
+/* Add hover effect similar to buttons */
+#num-days:hover {
+    border-color: var(--accent-hover);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    transform: translateY(-1px);
+}
+
+/* Optional: style the dropdown arrow */
+#num-days::after {
+    content: "▼";
+    position: absolute;
+    right: 12px;
+    pointer-events: none;
+    color: #fff;
+}
+
+/* Focus style */
+#num-days:focus {
+    border-color: var(--accent-hover);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    transform: translateY(-1px);
+}
+
+.base-controls {
+    display: flex;
+    justify-content: space-between;
+}

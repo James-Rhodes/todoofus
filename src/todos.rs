@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 
-use axum::{Json, extract::State, http::StatusCode};
+use axum::{
+    Json,
+    extract::{Query, State},
+    http::StatusCode,
+};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 
@@ -124,15 +128,23 @@ impl TodoInfo {
     }
 }
 
+#[derive(Debug, Deserialize)]
+pub struct GetTodosQuery {
+    num_todos: u64,
+}
+
 pub async fn get_all_todos(
     State(db): State<DB>,
+    Query(get_todos_query): Query<GetTodosQuery>,
 ) -> Result<(StatusCode, Json<Vec<TodoForDisplay>>), TodoofusError> {
     // Steps:
     // 1. Get all unfinished todos or todos from the last week or the parent is incomplete
     // 2. Create the tree data structure
 
     tracing::info!("getting all todos");
-    let todo_info = db.get_todo_info_for_display().await?;
+    let todo_info = db
+        .get_todo_info_for_display(get_todos_query.num_todos)
+        .await?;
 
     Ok((StatusCode::OK, Json(todo_info.into_display())))
 }
