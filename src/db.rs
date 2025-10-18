@@ -81,7 +81,7 @@ impl DB {
                 SELECT t.id
                 FROM todos t
                 WHERE t.completed = 0
-                   OR t.created_at >= ?
+                   OR t.completed_at >= ?
 
                 UNION
 
@@ -117,7 +117,7 @@ impl DB {
                 SELECT t.id
                 FROM todos t
                 WHERE t.completed = 0
-                   OR t.created_at >= ?
+                   OR t.completed_at >= ?
 
                 UNION
 
@@ -164,11 +164,18 @@ impl DB {
         let mut tx = self.pool.begin().await?;
 
         for completion in todo_for_completion {
-            sqlx::query("UPDATE todos SET completed = ? WHERE id = ?")
-                .bind(completion.completed)
-                .bind(completion.id)
-                .execute(&mut *tx)
-                .await?;
+            sqlx::query(
+                r#"
+                UPDATE todos 
+                SET completed = ?, completed_at = ?
+                WHERE id = ?
+                "#,
+            )
+            .bind(completion.completed)
+            .bind(chrono::Utc::now())
+            .bind(completion.id)
+            .execute(&mut *tx)
+            .await?;
         }
 
         tx.commit().await?;
