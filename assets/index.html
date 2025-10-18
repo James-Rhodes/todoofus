@@ -5,6 +5,7 @@
     <title>Todoofus</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles.css" type="text/css">
+    <link rel="manifest" href="/manifest.json">
     <script src="index.js" defer></script>
 
 </head>
@@ -64,5 +65,20 @@
             <div id="dummy-first-todo"></div>
         </div>
 
+    <script>
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+          const ua = navigator.userAgent;
+          const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
+
+          if (isMobile) {
+            navigator.serviceWorker.register('/service-worker.js')
+              .then(() => console.log('Service worker registered on mobile'))
+              .catch((err) => console.error('Service worker registration failed:', err));
+          } else {
+            console.log('Skipping service worker on desktop');
+          }
+        }
+    </script>
     </body>
 </html>
